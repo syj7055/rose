@@ -1,353 +1,516 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>지현이를 위한 로즈데이 선물</title>
-    <link href="https://fonts.googleapis.com/css2?family=Gamja+Flower&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-    <style>
-        :root {
-            --primary-pink: #ffb7c5;
-            --dark-pink: #ff4d6d;
-        }
-        body {
-            margin: 0;
-            padding: 0;
-            background-color: #fff0f3;
-            font-family: 'Gamja Flower', cursive;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: flex-start;
-            height: 100vh;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>지현이를 위한 로즈데이 선물</title>
 
-        /* 비디오 컨테이너: 화면을 더 크게 */
-        #video-container {
-            position: relative;
-            width: 95vw;
-            max-width: 700px;
-            height: 65vh; /* 화면의 65% 차지 */
-            margin-top: 20px;
-            border-radius: 20px;
-            overflow: hidden;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-            background: #000;
-        }
-        video {
-            width: 100%;
-            height: 100%;
-            object-fit: cover; /* 꽉 차게 */
-            transform: scaleX(-1); /* 거울 모드 */
-        }
-        canvas {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            transform: scaleX(-1);
-            z-index: 5;
-        }
+<link href="https://fonts.googleapis.com/css2?family=Gamja+Flower&display=swap" rel="stylesheet">
 
-        /* 하단 UI 영역 (대화창 및 햄스터) */
-        #bottom-ui {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            height: 30vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: flex-end;
-            padding-bottom: 20px;
-            z-index: 20;
-        }
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_detection/face_detection.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 
-        /* 대화창: 얼굴을 가리지 않게 비디오 아래로 분리 */
-        #dialog-box {
-            background: white;
-            padding: 15px 25px;
-            border-radius: 20px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-            width: 85%;
-            max-width: 500px;
-            text-align: center;
-            font-size: 1.5rem;
-            color: #444;
-            display: none;
-            margin-bottom: 10px;
-            word-break: keep-all; /* 단어 끊김 방지 */
-            min-height: 2.5rem;
-        }
+<style>
+:root {
+    --primary-pink: #ffb7c5;
+    --dark-pink: #ff4d6d;
+}
 
-        /* 햄스터 캐릭터 (다운받은 이미지 사용) */
-        #hamster {
-            width: 120px;
-            height: auto;
-            transition: all 1s ease-in-out;
-        }
-        .waddle {
-            animation: waddle 0.5s infinite;
-        }
-        @keyframes waddle {
-            0% { transform: translateX(0) rotate(-5deg); }
-            50% { transform: translateX(0) rotate(5deg); }
-            100% { transform: translateX(0) rotate(-5deg); }
-        }
+* {
+    box-sizing: border-box;
+}
 
-        /* 스캔 UI */
-        #scan-overlay {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            border: 4px solid var(--primary-pink);
-            box-sizing: border-box;
-            display: none;
-            z-index: 6;
-            background: linear-gradient(rgba(255,183,197,0.1) 50%, rgba(255,183,197,0.2) 50%);
-            background-size: 100% 4px;
-        }
-        .scan-line {
-            position: absolute;
-            width: 100%;
-            height: 3px;
-            background: var(--dark-pink);
-            top: 0;
-            animation: scan 2s linear infinite;
-        }
-        @keyframes scan {
-            0% { top: 0; }
-            100% { top: 100%; }
-        }
+body {
+    margin: 0;
+    padding: 0;
+    background: #fff0f3;
+    overflow: hidden;
+    font-family: 'Gamja Flower', cursive;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
 
-        /* 장미 이미지 */
-        #rose {
-            position: absolute;
-            width: 80px;
-            display: none;
-            z-index: 12;
-            pointer-events: none;
-        }
+#start-btn {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    padding: 18px 40px;
+    border: none;
+    border-radius: 999px;
+    background: var(--dark-pink);
+    color: white;
+    font-size: 2rem;
+    cursor: pointer;
+    font-family: inherit;
+    z-index: 100;
+}
 
-        /* 편지 모달 */
-        #letter-modal {
-            position: fixed;
-            top: 50%; left: 50%;
-            transform: translate(-50%, -50%) scale(0);
-            width: 85%;
-            max-width: 400px;
-            background: white;
-            padding: 30px;
-            border-radius: 15px;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.2);
-            z-index: 100;
-            text-align: center;
-            transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
-        #letter-modal.show { transform: translate(-50%, -50%) scale(1); }
-        .letter-content { font-size: 1.3rem; line-height: 1.6; color: #333; word-break: keep-all;}
-        .heart { color: var(--dark-pink); font-size: 2rem; margin-top: 10px; }
+#video-container {
+    position: relative;
+    width: 95vw;
+    max-width: 720px;
+    height: 68vh;
+    margin-top: 15px;
+    border-radius: 25px;
+    overflow: hidden;
+    display: none;
+    background: black;
+    box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+}
 
-        /* 시작 버튼 */
-        #start-btn {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            padding: 15px 40px;
-            font-size: 1.8rem;
-            background: var(--dark-pink);
-            color: white;
-            border: none;
-            border-radius: 50px;
-            cursor: pointer;
-            font-family: 'Gamja Flower', cursive;
-            transition: transform 0.2s;
-            z-index: 50;
-        }
-        #start-btn:hover { transform: translate(-50%, -50%) scale(1.1); }
-    </style>
+video,
+canvas {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transform: scaleX(-1);
+}
+
+canvas {
+    z-index: 3;
+}
+
+#scan-overlay {
+    position: absolute;
+    inset: 0;
+    border: 4px solid var(--primary-pink);
+    display: none;
+    z-index: 4;
+    overflow: hidden;
+}
+
+.scan-line {
+    position: absolute;
+    width: 100%;
+    height: 4px;
+    background: var(--dark-pink);
+    animation: scan 2s linear infinite;
+}
+
+@keyframes scan {
+    from { top: 0; }
+    to { top: 100%; }
+}
+
+#bottom-ui {
+    width: 100%;
+    height: 28vh;
+    display: none;
+    flex-direction: column;
+    justify-content: flex-end;
+    align-items: center;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    padding-bottom: 15px;
+    z-index: 20;
+}
+
+#dialog-box {
+    width: 85%;
+    max-width: 520px;
+    min-height: 70px;
+    background: white;
+    border-radius: 25px;
+    padding: 16px 24px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    text-align: center;
+    font-size: 1.6rem;
+    color: #444;
+    margin-bottom: 10px;
+    display: none;
+    word-break: keep-all;
+}
+
+#hamster {
+    width: 130px;
+    transition: all 1.2s ease;
+}
+
+.waddle {
+    animation: waddle 0.5s infinite;
+}
+
+@keyframes waddle {
+    0% { transform: rotate(-5deg); }
+    50% { transform: rotate(5deg); }
+    100% { transform: rotate(-5deg); }
+}
+
+#rose {
+    position: absolute;
+    width: 150px;
+    display: none;
+    pointer-events: none;
+    z-index: 10;
+}
+
+#letter-modal {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%) scale(0);
+    width: 88%;
+    max-width: 430px;
+    background: white;
+    border-radius: 25px;
+    padding: 28px;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.2);
+    text-align: center;
+    transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    z-index: 200;
+}
+
+#letter-modal.show {
+    transform: translateX(-50%) scale(1);
+}
+
+.letter-content {
+    font-size: 1.4rem;
+    line-height: 1.6;
+    color: #333;
+    word-break: keep-all;
+}
+
+.heart {
+    font-size: 2rem;
+    margin-top: 15px;
+}
+</style>
 </head>
+
 <body>
 
-    <button id="start-btn">❤️ 로즈데이 선물 열어보기 ❤️</button>
+<button id="start-btn">❤️ 로즈데이 선물 열어보기 ❤️</button>
 
-    <div id="video-container" style="display:none;">
-        <video id="input_video" playsinline></video>
-        <canvas id="output_canvas"></canvas>
-        <div id="scan-overlay"><div class="scan-line"></div></div>
-        <img id="rose" src="https://cdn-icons-png.flaticon.com/512/3405/3405863.png" alt="Rose">
+<div id="video-container">
+    <video id="input_video" playsinline></video>
+    <canvas id="output_canvas"></canvas>
+
+    <div id="scan-overlay">
+        <div class="scan-line"></div>
     </div>
 
-    <div id="bottom-ui" style="display:none;">
-        <div id="dialog-box"></div>
-        <img id="hamster" src="./hamster.png" alt="햄스터">
+    <img id="rose" src="./roses.png">
+</div>
+
+<div id="bottom-ui">
+    <div id="dialog-box"></div>
+    <img id="hamster" src="./hamster.png">
+</div>
+
+<div id="letter-modal">
+    <div class="letter-content">
+        지현아 🌹<br><br>
+
+        오늘 로즈데이인데 직접 꽃 못 전해줘서 미안해!<br><br>
+
+        멀리 떨어져 있어도<br>
+        내 마음은 항상 네 옆에 있어 😊<br><br>
+
+        오늘 하루 세상에서 제일 행복했으면 좋겠어.<br><br>
+
+        <strong>사랑해 ❤️</strong>
     </div>
 
-    <div id="letter-modal">
-        <div class="letter-content">
-            지현아, 오늘 로즈데인데 직접 옆에서 꽃 못 전해줘서 미안해!<br><br>
-            멀리 떨어져 있지만 내 마음은 항상 네 옆에 있는 거 알지?<br>
-            이 햄스터가 배달한 장미 받고 오늘 하루 세상에서 제일 행복했으면 좋겠어.<br><br>
-            <strong>사랑해 지현아! ❤️</strong>
-        </div>
-        <div class="heart">🌹✨</div>
-    </div>
+    <div class="heart">🌹✨</div>
+</div>
 
-    <script>
-        const videoElement = document.getElementById('input_video');
-        const canvasElement = document.getElementById('output_canvas');
-        const canvasCtx = canvasElement.getContext('2d');
-        const dialogBox = document.getElementById('dialog-box');
-        const hamster = document.getElementById('hamster');
-        const rose = document.getElementById('rose');
-        const scanOverlay = document.getElementById('scan-overlay');
-        const startBtn = document.getElementById('start-btn');
-        const videoContainer = document.getElementById('video-container');
-        const bottomUI = document.getElementById('bottom-ui');
+<script>
+const startBtn = document.getElementById('start-btn');
 
-        let currentState = 'START';
-        let isHandVisible = false;
+const videoContainer = document.getElementById('video-container');
+const bottomUI = document.getElementById('bottom-ui');
 
-        // 글자가 깨지지 않도록 타자기 효과 개선
-        function typeWriter(text, i = 0) {
-            if (i === 0) dialogBox.textContent = '';
-            if (i < text.length) {
-                dialogBox.textContent += text.charAt(i);
-                setTimeout(() => typeWriter(text, i + 1), 50);
-            }
+const videoElement = document.getElementById('input_video');
+const canvasElement = document.getElementById('output_canvas');
+const canvasCtx = canvasElement.getContext('2d');
+
+const dialogBox = document.getElementById('dialog-box');
+const hamster = document.getElementById('hamster');
+const rose = document.getElementById('rose');
+const scanOverlay = document.getElementById('scan-overlay');
+
+const letterModal = document.getElementById('letter-modal');
+
+let currentState = 'START';
+
+let faceDetected = false;
+let handDetected = false;
+let finishTriggered = false;
+
+function typeWriter(text, speed = 45) {
+    dialogBox.textContent = '';
+
+    let i = 0;
+
+    const typing = setInterval(() => {
+        dialogBox.textContent += text.charAt(i);
+        i++;
+
+        if (i >= text.length) {
+            clearInterval(typing);
         }
+    }, speed);
+}
 
-        function showMessage(text) {
-            dialogBox.style.display = 'block';
-            typeWriter(text);
+function showMessage(text) {
+    dialogBox.style.display = 'block';
+    typeWriter(text);
+}
+
+function launchConfetti() {
+    const end = Date.now() + 3000;
+
+    (function frame() {
+        confetti({
+            particleCount: 3,
+            angle: 60,
+            spread: 60,
+            origin: { x: 0 }
+        });
+
+        confetti({
+            particleCount: 3,
+            angle: 120,
+            spread: 60,
+            origin: { x: 1 }
+        });
+
+        if (Date.now() < end) {
+            requestAnimationFrame(frame);
         }
+    })();
+}
 
-        async function nextStep() {
-            switch(currentState) {
-                case 'START':
-                    startBtn.style.display = 'none';
-                    videoContainer.style.display = 'block';
-                    bottomUI.style.display = 'flex';
-                    showMessage("안녕 지현아! 나 햄찌에유! 로즈데이 선물 배달 왔어유!");
-                    currentState = 'GREETING';
-                    setTimeout(nextStep, 3500);
-                    break;
+async function nextStep() {
 
-                case 'GREETING':
-                    showMessage("잠깐! 지현이가 맞는지 얼굴 좀 확인해볼게유! (스캔 중...)");
-                    scanOverlay.style.display = 'block';
-                    currentState = 'SCANNING';
-                    setTimeout(nextStep, 4000);
-                    break;
+    switch(currentState) {
 
-                case 'SCANNING':
-                    scanOverlay.style.display = 'none';
-                    showMessage("지현이가 맞군유! 지현이가 맞다면 화면 보고 활짝 웃어보세유! 😆");
-                    currentState = 'SMILE_CHECK';
-                    setTimeout(nextStep, 4000); 
-                    break;
+        case 'START':
 
-                case 'SMILE_CHECK':
-                    showMessage("아이 예뻐라! 확인 완료! 이제 화면에 손바닥을 펼쳐서 내밀어보세유!");
-                    currentState = 'WAIT_FOR_HAND';
-                    break;
+            startBtn.style.display = 'none';
 
-                case 'FETCHING_ROSE':
-                    showMessage("좋아유! 거기 딱 기다리세유! 금방 가져올게유!");
-                    hamster.classList.add('waddle');
-                    hamster.style.transform = 'translateX(-200vw)'; // 화면 밖으로 퇴장
-                    
-                    setTimeout(() => {
-                        rose.style.display = 'block';
-                        hamster.style.transform = 'translateX(0)'; // 다시 중앙으로
-                        currentState = 'DELIVERING';
-                        showMessage("영차 영차... 여기 장미 배달 왔어유! 손으로 받아주세유!");
-                    }, 2500);
-                    break;
-            }
-        }
+            videoContainer.style.display = 'block';
+            bottomUI.style.display = 'flex';
 
-        function onResults(results) {
-            canvasCtx.save();
-            canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
-            
-            if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
-                const landmarks = results.multiHandLandmarks[0];
-                isHandVisible = true;
+            showMessage("안녕 지현아! 햄찌가 로즈데이 선물 배달 왔어유!");
 
-                if (currentState === 'WAIT_FOR_HAND') {
-                    currentState = 'FETCHING_ROSE';
-                    nextStep();
-                }
+            currentState = 'GREETING';
 
-                if (currentState === 'DELIVERING') {
-                    // 장미가 손을 따라다님
-                    rose.style.left = (landmarks[9].x * 100) + '%';
-                    rose.style.top = (landmarks[9].y * 100) + '%';
-                    rose.style.transform = 'translate(-50%, -50%)';
-                    
-                    setTimeout(finishEvent, 3000);
-                }
-            } else {
-                isHandVisible = false;
-            }
-            canvasCtx.restore();
-        }
-
-        function finishEvent() {
-            if (currentState === 'FINISHED') return;
-            currentState = 'FINISHED';
-            
-            showMessage("지현아, 로즈데이 축하해! 사랑해유! ❤️");
             setTimeout(() => {
-                hamster.style.transform = 'translateY(200px)'; // 아래로 퇴장
-                dialogBox.style.display = 'none';
-                
-                // 꽃잎 효과
-                const end = Date.now() + (5 * 1000);
-                const colors = ['#ffb7c5', '#ff4d6d', '#ffffff'];
+                nextStep();
+            }, 3500);
 
-                (function frame() {
-                    confetti({ particleCount: 3, angle: 60, spread: 55, origin: { x: 0 }, colors: colors });
-                    confetti({ particleCount: 3, angle: 120, spread: 55, origin: { x: 1 }, colors: colors });
+            break;
 
-                    if (Date.now() < end) { requestAnimationFrame(frame); }
-                }());
+        case 'GREETING':
 
-                // 편지 공개
-                document.getElementById('letter-modal').classList.add('show');
-            }, 2000);
+            scanOverlay.style.display = 'block';
+
+            showMessage("잠깐! 지현이가 맞는지 얼굴 확인해볼게유!");
+
+            currentState = 'SCANNING';
+
+            break;
+
+        case 'FACE_SUCCESS':
+
+            scanOverlay.style.display = 'none';
+
+            confetti({
+                particleCount: 40,
+                spread: 60
+            });
+
+            showMessage("확인 완료! 😆 이제 손바닥을 펼쳐서 내밀어보세유!");
+
+            currentState = 'WAIT_HAND';
+
+            break;
+
+        case 'FETCH_ROSE':
+
+            hamster.classList.add('waddle');
+
+            showMessage("좋아유! 꽃다발 가져오는 중이에유!");
+
+            hamster.style.transform = 'translateX(-180vw)';
+
+            setTimeout(() => {
+
+                hamster.style.transform = 'translateX(0)';
+
+                rose.style.display = 'block';
+
+                currentState = 'DELIVERING';
+
+                showMessage("여기 장미 꽃다발 받아주세유 🌹");
+
+            }, 2500);
+
+            break;
+
+        case 'FINISHED':
+
+            showMessage("로즈데이 축하해 ❤️");
+
+            launchConfetti();
+
+            setTimeout(() => {
+
+                hamster.style.transform = 'translateY(200px)';
+
+                letterModal.classList.add('show');
+
+            }, 1500);
+
+            break;
+    }
+}
+
+function finishEvent() {
+
+    if (finishTriggered) return;
+
+    finishTriggered = true;
+
+    currentState = 'FINISHED';
+
+    nextStep();
+}
+
+function onHandResults(results) {
+
+    canvasCtx.save();
+
+    canvasCtx.clearRect(
+        0,
+        0,
+        canvasElement.width,
+        canvasElement.height
+    );
+
+    if (
+        results.multiHandLandmarks &&
+        results.multiHandLandmarks.length > 0
+    ) {
+
+        handDetected = true;
+
+        const landmarks = results.multiHandLandmarks[0];
+
+        if (currentState === 'WAIT_HAND') {
+
+            currentState = 'FETCH_ROSE';
+
+            nextStep();
         }
 
-        startBtn.onclick = () => {
-            const hands = new Hands({
-                locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
-            });
-            hands.setOptions({
-                maxNumHands: 1,
-                modelComplexity: 1,
-                minDetectionConfidence: 0.5,
-                minTrackingConfidence: 0.5
-            });
-            hands.onResults(onResults);
+        if (currentState === 'DELIVERING') {
 
-            const camera = new Camera(videoElement, {
-                onFrame: async () => {
-                    await hands.send({image: videoElement});
-                },
-                width: 640,
-                height: 480
-            });
-            camera.start();
+            const x =
+                landmarks[9].x *
+                videoContainer.offsetWidth;
+
+            const y =
+                landmarks[9].y *
+                videoContainer.offsetHeight;
+
+            rose.style.left = `${x}px`;
+            rose.style.top = `${y}px`;
+
+            rose.style.transform =
+                'translate(-50%, -50%)';
+
+            if (!finishTriggered) {
+
+                setTimeout(() => {
+                    finishEvent();
+                }, 2500);
+            }
+        }
+
+    } else {
+
+        handDetected = false;
+    }
+
+    canvasCtx.restore();
+}
+
+startBtn.onclick = async () => {
+
+    const hands = new Hands({
+        locateFile: (file) =>
+            `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
+    });
+
+    hands.setOptions({
+        maxNumHands: 1,
+        modelComplexity: 1,
+        minDetectionConfidence: 0.6,
+        minTrackingConfidence: 0.6
+    });
+
+    hands.onResults(onHandResults);
+
+    const faceDetection = new FaceDetection({
+        locateFile: (file) =>
+            `https://cdn.jsdelivr.net/npm/@mediapipe/face_detection/${file}`
+    });
+
+    faceDetection.setOptions({
+        model: 'short',
+        minDetectionConfidence: 0.6
+    });
+
+    faceDetection.onResults((results) => {
+
+        const detected =
+            results.detections &&
+            results.detections.length > 0;
+
+        if (
+            detected &&
+            currentState === 'SCANNING'
+        ) {
+
+            faceDetected = true;
+
+            currentState = 'FACE_SUCCESS';
+
             nextStep();
-        };
-    </script>
+        }
+    });
+
+    const camera = new Camera(videoElement, {
+
+        onFrame: async () => {
+
+            await hands.send({
+                image: videoElement
+            });
+
+            await faceDetection.send({
+                image: videoElement
+            });
+        },
+
+        width: 640,
+        height: 480
+    });
+
+    camera.start();
+
+    nextStep();
+};
+</script>
+
 </body>
 </html>
