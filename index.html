@@ -12,15 +12,23 @@
             align-items: center;
             height: 100vh;
             margin: 0;
-            background-color: #d1c7b1; /* 원본 이미지 배경과 유사한 색상 */
+            background-color: #d1c7b1;
             font-family: "Arial Black", sans-serif;
+        }
+
+        /* 보드와 버튼을 묶어주는 래퍼 */
+        .tracker-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
         }
 
         /* 트래커 전체 컨테이너 */
         .tracker-board {
             background-color: #2b2e35;
             padding: 20px 20px 30px 20px;
-            border-radius: 120px 120px 10px 10px; /* 상단을 둥글게 */
+            border-radius: 120px 120px 10px 10px;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
             width: 320px;
         }
@@ -53,19 +61,12 @@
 
         /* 아이콘을 대체하는 색상 원 */
         .icon-circle {
-            pointer-events: none; /* 원을 눌러도 부채꼴이 클릭되도록 설정 */
+            pointer-events: none;
         }
 
-        /* 중앙 물음표 반원 */
+        /* 중앙 물음표가 있던 반원 */
         .center-arc {
             fill: #2b2e35;
-        }
-
-        .center-text {
-            fill: #ffffff;
-            font-size: 65px;
-            text-anchor: middle;
-            user-select: none;
         }
 
         /* 하단 숫자 영역 */
@@ -104,59 +105,85 @@
             background-color: #5a5f6b;
             color: #ffffff;
         }
+
+        /* 전체 리셋 버튼 스타일 */
+        .reset-btn {
+            padding: 12px 24px;
+            background-color: #2b2e35;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            font-family: inherit;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.2s ease, transform 0.1s ease;
+        }
+
+        .reset-btn:hover {
+            background-color: #5a5f6b;
+        }
+
+        .reset-btn:active {
+            transform: scale(0.95);
+        }
     </style>
 </head>
 <body>
 
-    <div class="tracker-board">
-        <div class="arch-container">
-            <svg viewBox="0 0 320 160">
-                <g onclick="toggleWedge(this)">
-                    <path class="wedge" d="M 160 160 L 0 160 A 160 160 0 0 1 30.56 66.08 Z" />
-                    <circle class="icon-circle" cx="60.1" cy="127.5" r="16" fill="#6dbf4e" />
-                </g>
-                <g onclick="toggleWedge(this)">
-                    <path class="wedge" d="M 160 160 L 30.56 66.08 A 160 160 0 0 1 110.56 7.84 Z" />
-                    <circle class="icon-circle" cx="98.3" cy="75.0" r="16" fill="#4dbce9" />
-                </g>
-                <g onclick="toggleWedge(this)">
-                    <path class="wedge" d="M 160 160 L 110.56 7.84 A 160 160 0 0 1 209.44 7.84 Z" />
-                    <circle class="icon-circle" cx="160" cy="55" r="16" fill="#f54242" />
-                </g>
-                <g onclick="toggleWedge(this)">
-                    <path class="wedge" d="M 160 160 L 209.44 7.84 A 160 160 0 0 1 289.44 66.08 Z" />
-                    <circle class="icon-circle" cx="221.6" cy="75.0" r="16" fill="#f5ca3d" />
-                </g>
-                <g onclick="toggleWedge(this)">
-                    <path class="wedge" d="M 160 160 L 289.44 66.08 A 160 160 0 0 1 320 160 Z" />
-                    <circle class="icon-circle" cx="259.8" cy="127.5" r="16" fill="#000000" />
-                </g>
+    <div class="tracker-wrapper">
+        <div class="tracker-board">
+            <div class="arch-container">
+                <svg viewBox="0 0 320 160">
+                    <g onclick="toggleWedge(this)">
+                        <path class="wedge" d="M 160 160 L 0 160 A 160 160 0 0 1 30.56 66.08 Z" />
+                        <circle class="icon-circle" cx="60.1" cy="127.5" r="16" fill="#6dbf4e" />
+                    </g>
+                    <g onclick="toggleWedge(this)">
+                        <path class="wedge" d="M 160 160 L 30.56 66.08 A 160 160 0 0 1 110.56 7.84 Z" />
+                        <circle class="icon-circle" cx="98.3" cy="75.0" r="16" fill="#4dbce9" />
+                    </g>
+                    <g onclick="toggleWedge(this)">
+                        <path class="wedge" d="M 160 160 L 110.56 7.84 A 160 160 0 0 1 209.44 7.84 Z" />
+                        <circle class="icon-circle" cx="160" cy="55" r="16" fill="#f54242" />
+                    </g>
+                    <g onclick="toggleWedge(this)">
+                        <path class="wedge" d="M 160 160 L 209.44 7.84 A 160 160 0 0 1 289.44 66.08 Z" />
+                        <circle class="icon-circle" cx="221.6" cy="75.0" r="16" fill="#f5ca3d" />
+                    </g>
+                    <g onclick="toggleWedge(this)">
+                        <path class="wedge" d="M 160 160 L 289.44 66.08 A 160 160 0 0 1 320 160 Z" />
+                        <circle class="icon-circle" cx="259.8" cy="127.5" r="16" fill="#000000" />
+                    </g>
 
-                <path class="center-arc" d="M 100 160 A 60 60 0 0 1 220 160 Z" />
-                <text x="160" y="145" class="center-text">?</text>
-            </svg>
+                    <path class="center-arc" d="M 100 160 A 60 60 0 0 1 220 160 Z" />
+                </svg>
+            </div>
+
+            <div class="numbers-section">
+                <div class="numbers-row">
+                    <div class="number-circle" onclick="toggleNumber(this)">2</div>
+                    <div class="number-circle" onclick="toggleNumber(this)">3</div>
+                    <div class="number-circle" onclick="toggleNumber(this)">4</div>
+                    <div class="number-circle" onclick="toggleNumber(this)">5</div>
+                    <div class="number-circle" onclick="toggleNumber(this)">6</div>
+                    <div class="number-circle" onclick="toggleNumber(this)">7</div>
+                    <div class="number-circle" onclick="toggleNumber(this)">8</div>
+                </div>
+                <div class="numbers-row">
+                    <div class="number-circle" onclick="toggleNumber(this)">9</div>
+                    <div class="number-circle" onclick="toggleNumber(this)">10</div>
+                    <div class="number-circle" onclick="toggleNumber(this)">11</div>
+                    <div class="number-circle" onclick="toggleNumber(this)">12</div>
+                    <div class="number-circle" onclick="toggleNumber(this)">13</div>
+                    <div class="number-circle" onclick="toggleNumber(this)">14</div>
+                    <div class="number-circle" onclick="toggleNumber(this)">15</div>
+                </div>
+            </div>
         </div>
 
-        <div class="numbers-section">
-            <div class="numbers-row">
-                <div class="number-circle" onclick="toggleNumber(this)">2</div>
-                <div class="number-circle" onclick="toggleNumber(this)">3</div>
-                <div class="number-circle" onclick="toggleNumber(this)">4</div>
-                <div class="number-circle" onclick="toggleNumber(this)">5</div>
-                <div class="number-circle" onclick="toggleNumber(this)">6</div>
-                <div class="number-circle" onclick="toggleNumber(this)">7</div>
-                <div class="number-circle" onclick="toggleNumber(this)">8</div>
-            </div>
-            <div class="numbers-row">
-                <div class="number-circle" onclick="toggleNumber(this)">9</div>
-                <div class="number-circle" onclick="toggleNumber(this)">10</div>
-                <div class="number-circle" onclick="toggleNumber(this)">11</div>
-                <div class="number-circle" onclick="toggleNumber(this)">12</div>
-                <div class="number-circle" onclick="toggleNumber(this)">13</div>
-                <div class="number-circle" onclick="toggleNumber(this)">14</div>
-                <div class="number-circle" onclick="toggleNumber(this)">15</div>
-            </div>
-        </div>
+        <button class="reset-btn" onclick="resetAll()">전체 리셋</button>
     </div>
 
     <script>
@@ -169,6 +196,17 @@
         // 하단 숫자 클릭 이벤트
         function toggleNumber(element) {
             element.classList.toggle('active');
+        }
+
+        // 전체 리셋 이벤트
+        function resetAll() {
+            // 활성화된(active 클래스가 있는) 부채꼴을 모두 찾아 클래스 제거
+            const activeWedges = document.querySelectorAll('.wedge.active');
+            activeWedges.forEach(wedge => wedge.classList.remove('active'));
+
+            // 활성화된 숫자 버튼을 모두 찾아 클래스 제거
+            const activeNumbers = document.querySelectorAll('.number-circle.active');
+            activeNumbers.forEach(number => number.classList.remove('active'));
         }
     </script>
 </body>
