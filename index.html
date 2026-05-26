@@ -1,516 +1,175 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>지현이를 위한 로즈데이 선물</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>보드게임 트래커</title>
+    <style>
+        /* 배경 및 기본 레이아웃 설정 */
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #d1c7b1; /* 원본 이미지 배경과 유사한 색상 */
+            font-family: "Arial Black", sans-serif;
+        }
 
-<link href="https://fonts.googleapis.com/css2?family=Gamja+Flower&display=swap" rel="stylesheet">
+        /* 트래커 전체 컨테이너 */
+        .tracker-board {
+            background-color: #2b2e35;
+            padding: 20px 20px 30px 20px;
+            border-radius: 120px 120px 10px 10px; /* 상단을 둥글게 */
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            width: 320px;
+        }
 
-<script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_detection/face_detection.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+        /* 상단 아치형(SVG) 영역 */
+        .arch-container {
+            position: relative;
+            width: 320px;
+            height: 160px;
+        }
 
-<style>
-:root {
-    --primary-pink: #ffb7c5;
-    --dark-pink: #ff4d6d;
-}
+        svg {
+            width: 100%;
+            height: 100%;
+        }
 
-* {
-    box-sizing: border-box;
-}
+        /* 5개의 부채꼴 클릭 영역 */
+        .wedge {
+            fill: #ffffff;
+            stroke: #2b2e35;
+            stroke-width: 6px;
+            cursor: pointer;
+            transition: fill 0.2s ease;
+        }
 
-body {
-    margin: 0;
-    padding: 0;
-    background: #fff0f3;
-    overflow: hidden;
-    font-family: 'Gamja Flower', cursive;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-}
+        /* 클릭 시 배경이 짙은 회색으로 변경 */
+        .wedge.active {
+            fill: #5a5f6b;
+        }
 
-#start-btn {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    padding: 18px 40px;
-    border: none;
-    border-radius: 999px;
-    background: var(--dark-pink);
-    color: white;
-    font-size: 2rem;
-    cursor: pointer;
-    font-family: inherit;
-    z-index: 100;
-}
+        /* 아이콘을 대체하는 색상 원 */
+        .icon-circle {
+            pointer-events: none; /* 원을 눌러도 부채꼴이 클릭되도록 설정 */
+        }
 
-#video-container {
-    position: relative;
-    width: 95vw;
-    max-width: 720px;
-    height: 68vh;
-    margin-top: 15px;
-    border-radius: 25px;
-    overflow: hidden;
-    display: none;
-    background: black;
-    box-shadow: 0 15px 40px rgba(0,0,0,0.15);
-}
+        /* 중앙 물음표 반원 */
+        .center-arc {
+            fill: #2b2e35;
+        }
 
-video,
-canvas {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    transform: scaleX(-1);
-}
+        .center-text {
+            fill: #ffffff;
+            font-size: 65px;
+            text-anchor: middle;
+            user-select: none;
+        }
 
-canvas {
-    z-index: 3;
-}
+        /* 하단 숫자 영역 */
+        .numbers-section {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 10px;
+        }
 
-#scan-overlay {
-    position: absolute;
-    inset: 0;
-    border: 4px solid var(--primary-pink);
-    display: none;
-    z-index: 4;
-    overflow: hidden;
-}
+        .numbers-row {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+        }
 
-.scan-line {
-    position: absolute;
-    width: 100%;
-    height: 4px;
-    background: var(--dark-pink);
-    animation: scan 2s linear infinite;
-}
+        /* 각 숫자 동그라미 */
+        .number-circle {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 35px;
+            height: 35px;
+            background-color: #ffffff;
+            color: #2b2e35;
+            border-radius: 50%;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.2s ease, color 0.2s ease;
+            user-select: none;
+        }
 
-@keyframes scan {
-    from { top: 0; }
-    to { top: 100%; }
-}
-
-#bottom-ui {
-    width: 100%;
-    height: 28vh;
-    display: none;
-    flex-direction: column;
-    justify-content: flex-end;
-    align-items: center;
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    padding-bottom: 15px;
-    z-index: 20;
-}
-
-#dialog-box {
-    width: 85%;
-    max-width: 520px;
-    min-height: 70px;
-    background: white;
-    border-radius: 25px;
-    padding: 16px 24px;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-    text-align: center;
-    font-size: 1.6rem;
-    color: #444;
-    margin-bottom: 10px;
-    display: none;
-    word-break: keep-all;
-}
-
-#hamster {
-    width: 130px;
-    transition: all 1.2s ease;
-}
-
-.waddle {
-    animation: waddle 0.5s infinite;
-}
-
-@keyframes waddle {
-    0% { transform: rotate(-5deg); }
-    50% { transform: rotate(5deg); }
-    100% { transform: rotate(-5deg); }
-}
-
-#rose {
-    position: absolute;
-    width: 150px;
-    display: none;
-    pointer-events: none;
-    z-index: 10;
-}
-
-#letter-modal {
-    position: fixed;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%) scale(0);
-    width: 88%;
-    max-width: 430px;
-    background: white;
-    border-radius: 25px;
-    padding: 28px;
-    box-shadow: 0 20px 50px rgba(0,0,0,0.2);
-    text-align: center;
-    transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    z-index: 200;
-}
-
-#letter-modal.show {
-    transform: translateX(-50%) scale(1);
-}
-
-.letter-content {
-    font-size: 1.4rem;
-    line-height: 1.6;
-    color: #333;
-    word-break: keep-all;
-}
-
-.heart {
-    font-size: 2rem;
-    margin-top: 15px;
-}
-</style>
+        /* 클릭 시 숫자 배경 변경 및 텍스트 반전 */
+        .number-circle.active {
+            background-color: #5a5f6b;
+            color: #ffffff;
+        }
+    </style>
 </head>
-
 <body>
 
-<button id="start-btn">❤️ 로즈데이 선물 열어보기 ❤️</button>
+    <div class="tracker-board">
+        <div class="arch-container">
+            <svg viewBox="0 0 320 160">
+                <g onclick="toggleWedge(this)">
+                    <path class="wedge" d="M 160 160 L 0 160 A 160 160 0 0 1 30.56 66.08 Z" />
+                    <circle class="icon-circle" cx="60.1" cy="127.5" r="16" fill="#6dbf4e" />
+                </g>
+                <g onclick="toggleWedge(this)">
+                    <path class="wedge" d="M 160 160 L 30.56 66.08 A 160 160 0 0 1 110.56 7.84 Z" />
+                    <circle class="icon-circle" cx="98.3" cy="75.0" r="16" fill="#4dbce9" />
+                </g>
+                <g onclick="toggleWedge(this)">
+                    <path class="wedge" d="M 160 160 L 110.56 7.84 A 160 160 0 0 1 209.44 7.84 Z" />
+                    <circle class="icon-circle" cx="160" cy="55" r="16" fill="#f54242" />
+                </g>
+                <g onclick="toggleWedge(this)">
+                    <path class="wedge" d="M 160 160 L 209.44 7.84 A 160 160 0 0 1 289.44 66.08 Z" />
+                    <circle class="icon-circle" cx="221.6" cy="75.0" r="16" fill="#f5ca3d" />
+                </g>
+                <g onclick="toggleWedge(this)">
+                    <path class="wedge" d="M 160 160 L 289.44 66.08 A 160 160 0 0 1 320 160 Z" />
+                    <circle class="icon-circle" cx="259.8" cy="127.5" r="16" fill="#000000" />
+                </g>
 
-<div id="video-container">
-    <video id="input_video" playsinline></video>
-    <canvas id="output_canvas"></canvas>
+                <path class="center-arc" d="M 100 160 A 60 60 0 0 1 220 160 Z" />
+                <text x="160" y="145" class="center-text">?</text>
+            </svg>
+        </div>
 
-    <div id="scan-overlay">
-        <div class="scan-line"></div>
+        <div class="numbers-section">
+            <div class="numbers-row">
+                <div class="number-circle" onclick="toggleNumber(this)">2</div>
+                <div class="number-circle" onclick="toggleNumber(this)">3</div>
+                <div class="number-circle" onclick="toggleNumber(this)">4</div>
+                <div class="number-circle" onclick="toggleNumber(this)">5</div>
+                <div class="number-circle" onclick="toggleNumber(this)">6</div>
+                <div class="number-circle" onclick="toggleNumber(this)">7</div>
+                <div class="number-circle" onclick="toggleNumber(this)">8</div>
+            </div>
+            <div class="numbers-row">
+                <div class="number-circle" onclick="toggleNumber(this)">9</div>
+                <div class="number-circle" onclick="toggleNumber(this)">10</div>
+                <div class="number-circle" onclick="toggleNumber(this)">11</div>
+                <div class="number-circle" onclick="toggleNumber(this)">12</div>
+                <div class="number-circle" onclick="toggleNumber(this)">13</div>
+                <div class="number-circle" onclick="toggleNumber(this)">14</div>
+                <div class="number-circle" onclick="toggleNumber(this)">15</div>
+            </div>
+        </div>
     </div>
 
-    <img id="rose" src="./roses.png">
-</div>
-
-<div id="bottom-ui">
-    <div id="dialog-box"></div>
-    <img id="hamster" src="./hamster.png">
-</div>
-
-<div id="letter-modal">
-    <div class="letter-content">
-        지현아 🌹<br><br>
-
-        오늘 로즈데이인데 직접 꽃 못 전해줘서 미안해!<br><br>
-
-        멀리 떨어져 있어도<br>
-        내 마음은 항상 네 옆에 있어 😊<br><br>
-
-        오늘 하루 세상에서 제일 행복했으면 좋겠어.<br><br>
-
-        <strong>사랑해 ❤️</strong>
-    </div>
-
-    <div class="heart">🌹✨</div>
-</div>
-
-<script>
-const startBtn = document.getElementById('start-btn');
-
-const videoContainer = document.getElementById('video-container');
-const bottomUI = document.getElementById('bottom-ui');
-
-const videoElement = document.getElementById('input_video');
-const canvasElement = document.getElementById('output_canvas');
-const canvasCtx = canvasElement.getContext('2d');
-
-const dialogBox = document.getElementById('dialog-box');
-const hamster = document.getElementById('hamster');
-const rose = document.getElementById('rose');
-const scanOverlay = document.getElementById('scan-overlay');
-
-const letterModal = document.getElementById('letter-modal');
-
-let currentState = 'START';
-
-let faceDetected = false;
-let handDetected = false;
-let finishTriggered = false;
-
-function typeWriter(text, speed = 45) {
-    dialogBox.textContent = '';
-
-    let i = 0;
-
-    const typing = setInterval(() => {
-        dialogBox.textContent += text.charAt(i);
-        i++;
-
-        if (i >= text.length) {
-            clearInterval(typing);
-        }
-    }, speed);
-}
-
-function showMessage(text) {
-    dialogBox.style.display = 'block';
-    typeWriter(text);
-}
-
-function launchConfetti() {
-    const end = Date.now() + 3000;
-
-    (function frame() {
-        confetti({
-            particleCount: 3,
-            angle: 60,
-            spread: 60,
-            origin: { x: 0 }
-        });
-
-        confetti({
-            particleCount: 3,
-            angle: 120,
-            spread: 60,
-            origin: { x: 1 }
-        });
-
-        if (Date.now() < end) {
-            requestAnimationFrame(frame);
-        }
-    })();
-}
-
-async function nextStep() {
-
-    switch(currentState) {
-
-        case 'START':
-
-            startBtn.style.display = 'none';
-
-            videoContainer.style.display = 'block';
-            bottomUI.style.display = 'flex';
-
-            showMessage("안녕 지현아! 햄찌가 로즈데이 선물 배달 왔어유!");
-
-            currentState = 'GREETING';
-
-            setTimeout(() => {
-                nextStep();
-            }, 3500);
-
-            break;
-
-        case 'GREETING':
-
-            scanOverlay.style.display = 'block';
-
-            showMessage("잠깐! 지현이가 맞는지 얼굴 확인해볼게유!");
-
-            currentState = 'SCANNING';
-
-            break;
-
-        case 'FACE_SUCCESS':
-
-            scanOverlay.style.display = 'none';
-
-            confetti({
-                particleCount: 40,
-                spread: 60
-            });
-
-            showMessage("확인 완료! 😆 이제 손바닥을 펼쳐서 내밀어보세유!");
-
-            currentState = 'WAIT_HAND';
-
-            break;
-
-        case 'FETCH_ROSE':
-
-            hamster.classList.add('waddle');
-
-            showMessage("좋아유! 꽃다발 가져오는 중이에유!");
-
-            hamster.style.transform = 'translateX(-180vw)';
-
-            setTimeout(() => {
-
-                hamster.style.transform = 'translateX(0)';
-
-                rose.style.display = 'block';
-
-                currentState = 'DELIVERING';
-
-                showMessage("여기 장미 꽃다발 받아주세유 🌹");
-
-            }, 2500);
-
-            break;
-
-        case 'FINISHED':
-
-            showMessage("로즈데이 축하해 ❤️");
-
-            launchConfetti();
-
-            setTimeout(() => {
-
-                hamster.style.transform = 'translateY(200px)';
-
-                letterModal.classList.add('show');
-
-            }, 1500);
-
-            break;
-    }
-}
-
-function finishEvent() {
-
-    if (finishTriggered) return;
-
-    finishTriggered = true;
-
-    currentState = 'FINISHED';
-
-    nextStep();
-}
-
-function onHandResults(results) {
-
-    canvasCtx.save();
-
-    canvasCtx.clearRect(
-        0,
-        0,
-        canvasElement.width,
-        canvasElement.height
-    );
-
-    if (
-        results.multiHandLandmarks &&
-        results.multiHandLandmarks.length > 0
-    ) {
-
-        handDetected = true;
-
-        const landmarks = results.multiHandLandmarks[0];
-
-        if (currentState === 'WAIT_HAND') {
-
-            currentState = 'FETCH_ROSE';
-
-            nextStep();
+    <script>
+        // 상단 부채꼴 클릭 이벤트
+        function toggleWedge(groupElement) {
+            const wedgePath = groupElement.querySelector('.wedge');
+            wedgePath.classList.toggle('active');
         }
 
-        if (currentState === 'DELIVERING') {
-
-            const x =
-                landmarks[9].x *
-                videoContainer.offsetWidth;
-
-            const y =
-                landmarks[9].y *
-                videoContainer.offsetHeight;
-
-            rose.style.left = `${x}px`;
-            rose.style.top = `${y}px`;
-
-            rose.style.transform =
-                'translate(-50%, -50%)';
-
-            if (!finishTriggered) {
-
-                setTimeout(() => {
-                    finishEvent();
-                }, 2500);
-            }
+        // 하단 숫자 클릭 이벤트
+        function toggleNumber(element) {
+            element.classList.toggle('active');
         }
-
-    } else {
-
-        handDetected = false;
-    }
-
-    canvasCtx.restore();
-}
-
-startBtn.onclick = async () => {
-
-    const hands = new Hands({
-        locateFile: (file) =>
-            `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
-    });
-
-    hands.setOptions({
-        maxNumHands: 1,
-        modelComplexity: 1,
-        minDetectionConfidence: 0.6,
-        minTrackingConfidence: 0.6
-    });
-
-    hands.onResults(onHandResults);
-
-    const faceDetection = new FaceDetection({
-        locateFile: (file) =>
-            `https://cdn.jsdelivr.net/npm/@mediapipe/face_detection/${file}`
-    });
-
-    faceDetection.setOptions({
-        model: 'short',
-        minDetectionConfidence: 0.6
-    });
-
-    faceDetection.onResults((results) => {
-
-        const detected =
-            results.detections &&
-            results.detections.length > 0;
-
-        if (
-            detected &&
-            currentState === 'SCANNING'
-        ) {
-
-            faceDetected = true;
-
-            currentState = 'FACE_SUCCESS';
-
-            nextStep();
-        }
-    });
-
-    const camera = new Camera(videoElement, {
-
-        onFrame: async () => {
-
-            await hands.send({
-                image: videoElement
-            });
-
-            await faceDetection.send({
-                image: videoElement
-            });
-        },
-
-        width: 640,
-        height: 480
-    });
-
-    camera.start();
-
-    nextStep();
-};
-</script>
-
+    </script>
 </body>
 </html>
